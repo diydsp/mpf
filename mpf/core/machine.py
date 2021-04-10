@@ -11,6 +11,7 @@ from pkg_resources import iter_entry_points
 from mpf._version import __version__
 from mpf.core.clock import ClockBase
 from mpf.core.config_validator import ConfigValidator
+from mpf.core.crash_reporter import report_crash
 from mpf.core.data_manager import DataManager
 from mpf.core.delays import DelayManager
 from mpf.core.device_manager import DeviceCollection
@@ -657,10 +658,11 @@ class MachineController(LogMixin):
             self._crash_shutdown()
             self.error_log("MPF needed more than {}s for initialisation. Aborting!".format(timeout))
             return False
-        except RuntimeError:
+        except RuntimeError as e:
             self._crash_shutdown()
             # do not show a runtime useless runtime error
             self.error_log("Failed to initialise MPF")
+            report_crash(e, "init_runtime_error", self.config)
             return False
         if init.done() and init.exception():
             self._crash_shutdown()
@@ -668,6 +670,7 @@ class MachineController(LogMixin):
                 raise init.exception()
             except:     # noqa
                 self.log.exception("Failed to initialise MPF")
+                report_crash(init.exception(), "init_exception", self.config)
             return False
 
         return True
@@ -686,7 +689,8 @@ class MachineController(LogMixin):
         if self.stop_future.done():
             return
 
-        self.clock.loop.call_soon_threadsafe(self._stop_loop, reason)
+        if self.clock and self.clock.loop and self.clock.loop.is_running():
+            self.clock.loop.call_soon_threadsafe(self._stop_loop, reason)
 
     def _stop_loop(self, reason):
         self.stop_future.set_result(reason)
@@ -737,9 +741,11 @@ class MachineController(LogMixin):
         except KeyboardInterrupt:
             print("Shutdown because of keyboard interrupts")
             return
-        except BaseException:   # pylint: disable-msg=broad-except
+        except BaseException as e:   # pylint: disable-msg=broad-except
             # this happens when receiving a signal
+            self._crash_shutdown()
             self.log.exception("Loop exited with exception")
+            report_crash(e, "run_loop", self.config)
             return
 
         if self._exception:
@@ -750,6 +756,8 @@ class MachineController(LogMixin):
                 raise self._exception['exception']
             except:     # noqa
                 self.log.exception("Runtime Exception")
+                report_crash(self._exception['exception'], "exception_during_run", self.config)
+            self._exception = None
         else:
             self._do_stop()
             print("Shutdown reason: {}".format(reason))
