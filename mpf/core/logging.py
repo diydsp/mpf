@@ -26,6 +26,7 @@ class LogMixin:
 
     def __init__(self) -> None:
         """Initialise Log Mixin."""
+        print("HELLO")
         self.log = None     # type: Optional[Logger]
         self._info_to_console = False
         self._debug_to_console = False
