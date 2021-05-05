@@ -2,6 +2,8 @@
 import logging
 from logging import Logger
 
+import zmq
+
 from mpf.exceptions.config_file_error import ConfigFileError
 from mpf._version import log_url
 
@@ -18,7 +20,7 @@ class LogMixin:
     unit_test = False
 
     __slots__ = ["log", "_info_to_console", "_debug_to_console", "_debug", "_info_to_file", "_debug_to_file",
-                 "_info", "_url_base"]
+                 "_info", "_url_base", "_zSocket" ]
 
     def __init__(self) -> None:
         """Initialise Log Mixin."""
@@ -39,12 +41,19 @@ class LogMixin:
         logging.addLevelName(22, "INFO")
         logging.addLevelName(12, "DEBUG")
 
+        # start zmq here
+        zContext = zmq.Context()
+        zSocket  = zContext.socket( zmq.PUSH )
+        zSocket.connect( "tcp://localhost:5555" )
+        print( f"Sending zmq msg" )
+        zSocket.send( b"Hello" )
+        self._zSocket = zSocket
+        
     def configure_logging(self, logger: str, console_level: str = 'basic',
                           file_level: str = 'basic', url_base=None):
         """Configure logging.
 
         Args:
-        ----
             logger: The string name of the logger to use.
             console_level: The level of logging for the console. Valid options
                 are "none", "basic", or "full".
@@ -125,6 +134,11 @@ class LogMixin:
         if not self.log.isEnabledFor(level):
             return
 
+        try:
+            #self._zSocket.send( b"msg from info_log" )
+            self._zSocket.send( self.format_log_line(msg, context, error_no).encode() )
+        except:
+            print( "cant use zsocket...yet" )
         self.log.log(level, self.format_log_line(msg, context, error_no), *args, **kwargs)
 
     def warning_log(self, msg: str, *args, context=None, error_no=None, **kwargs) -> None:
@@ -167,10 +181,9 @@ class LogMixin:
 
         return msg
 
-    def raise_config_error(self, msg, error_no, *, source_exception=None, context=None) -> "NoReturn":
+    def raise_config_error(self, msg, error_no, *, context=None) -> "NoReturn":
         """Raise a ConfigFileError exception."""
-        raise ConfigFileError(msg, error_no, self.log.name if self.log else "", context, self._url_base) \
-            from source_exception
+        raise ConfigFileError(msg, error_no, self.log.name if self.log else "", context, self._url_base)
 
     def ignorable_runtime_exception(self, msg: str) -> None:
         """Handle ignorable runtime exception.
@@ -183,9 +196,6 @@ class LogMixin:
         self.error_log(msg)
 
     def _logging_not_configured(self) -> "NoReturn":
-        if self.machine and self.machine.is_shutting_down:
-            # omit errors on shutdown
-            return
         raise RuntimeError(
             "Logging has not been configured for the {} module. You must call "
             "configure_logging() before you can post a log message".
