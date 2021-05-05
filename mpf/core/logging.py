@@ -1,3 +1,5 @@
+"""FORKED VESION"""
+
 """Contains the LogMixin class."""
 import logging
 from logging import Logger
