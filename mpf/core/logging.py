@@ -5,6 +5,7 @@ import logging
 from logging import Logger
 
 import zmq
+import json
 
 from mpf.exceptions.config_file_error import ConfigFileError
 from mpf._version import log_url
@@ -141,12 +142,14 @@ class LogMixin:
             parsed_msg = msg.split(" ")[2]
             print("\n New Msg")
             #self._zSocket.send( b"msg from info_log" )
-            print("msg : ", msg)
-            print("context : ",context)
-            print("formatted msg : ",self.format_log_line(msg, context, error_no))
-            print("*args : ", *args)
             print("msg to send  : {} {}".format(str(*args),parsed_msg))
-            self._zSocket.send( self.format_log_line(msg, context, error_no).encode() )
+            msg_to_send = {
+                "component" : str(*args),
+                "new_state" : parsed_msg
+            }
+            
+            print(str(json.dumps(msg_to_send )))
+            self._zSocket.send( str(json.dumps(msg_to_send )))
         except:
             print( "cant use zsocket...yet" )
         self.log.log(level, self.format_log_line(msg, context, error_no), *args, **kwargs)
