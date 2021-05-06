@@ -140,7 +140,7 @@ class LogMixin:
 
         try:
             parsed_msg = msg.split(" ")[2]
-            print("\n New Msg")
+            print("\n New Msg! : ")
             #self._zSocket.send( b"msg from info_log" )
             print("msg to send  : {} {}".format(str(*args),parsed_msg))
             msg_to_send = json.dumps({
