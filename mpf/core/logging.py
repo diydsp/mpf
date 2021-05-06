@@ -143,13 +143,13 @@ class LogMixin:
             print("\n New Msg")
             #self._zSocket.send( b"msg from info_log" )
             print("msg to send  : {} {}".format(str(*args),parsed_msg))
-            msg_to_send = {
+            msg_to_send = json.dumps({
                 "component" : str(*args),
                 "new_state" : parsed_msg
-            }
+            })
             
-            print(str(json.dumps(msg_to_send )))
-            self._zSocket.send( json.dumps(msg_to_send))
+            print(msg_to_send.encode())
+            self._zSocket.send( msg_to_send.encode())
         except Exception as e:
             print( e )
         self.log.log(level, self.format_log_line(msg, context, error_no), *args, **kwargs)
