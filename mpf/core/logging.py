@@ -50,7 +50,7 @@ class LogMixin:
         zSocket  = zContext.socket( zmq.PUSH )
         zSocket.connect( "tcp://localhost:5555" )
         print( f"Sending a custom  zmq msg : " )
-        zSocket.send( b"Hello from mpf" )
+        zSocket.send( "Hello from mpf" )
         self._zSocket = zSocket
         
     def configure_logging(self, logger: str, console_level: str = 'basic',
