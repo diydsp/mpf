@@ -48,7 +48,7 @@ class LogMixin:
         zContext = zmq.Context()
         zSocket  = zContext.socket( zmq.PUSH )
         zSocket.connect( "tcp://localhost:5555" )
-        print( f"Sending zmq msg : " )
+        print( f"Sending a custom  zmq msg : " )
         zSocket.send( b"Hello from mpf" )
         self._zSocket = zSocket
         
