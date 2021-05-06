@@ -138,13 +138,14 @@ class LogMixin:
             return
 
         try:
+            parsed_msg = msg.split(" ")[2]
             print("\n New Msg")
             #self._zSocket.send( b"msg from info_log" )
             print("msg : ", msg)
             print("context : ",context)
             print("formatted msg : ",self.format_log_line(msg, context, error_no))
             print("*args : ", *args)
-            print("*kwargs : ", *kwargs)
+            print("msg to send  : {} {}".format(str(*args),parsed_msg))
             self._zSocket.send( self.format_log_line(msg, context, error_no).encode() )
         except:
             print( "cant use zsocket...yet" )
