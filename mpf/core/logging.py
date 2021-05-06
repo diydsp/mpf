@@ -149,7 +149,7 @@ class LogMixin:
             })
             
             print(msg_to_send)
-            self._zSocket.send( msg_to_send)
+            self._zSocket.send_string( msg_to_send)
         except Exception as e:
             print( e )
         self.log.log(level, self.format_log_line(msg, context, error_no), *args, **kwargs)
