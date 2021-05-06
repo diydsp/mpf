@@ -148,8 +148,8 @@ class LogMixin:
                 "new_state" : parsed_msg
             })
             
-            print(msg_to_send.encode())
-            self._zSocket.send( msg_to_send.encode())
+            print(msg_to_send)
+            self._zSocket.send( msg_to_send)
         except Exception as e:
             print( e )
         self.log.log(level, self.format_log_line(msg, context, error_no), *args, **kwargs)
