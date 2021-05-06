@@ -149,9 +149,9 @@ class LogMixin:
             }
             
             print(str(json.dumps(msg_to_send )))
-            self._zSocket.send( str(json.dumps(msg_to_send )))
-        except:
-            print( "cant use zsocket...yet" )
+            self._zSocket.send( json.dumps(msg_to_send))
+        except Exception as e:
+            print( e )
         self.log.log(level, self.format_log_line(msg, context, error_no), *args, **kwargs)
 
     def warning_log(self, msg: str, *args, context=None, error_no=None, **kwargs) -> None:
